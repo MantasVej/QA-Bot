@@ -16,10 +16,9 @@ def preprocess_text(text):
 
     # Tokenize, remove stopwords, and apply stemming
     words = [ps.stem(word.lower()) for word in word_tokenize(text) if word.isalnum() and word.lower() not in stop_words]
-
+    
     return ' '.join(words)
 
-# Load your QA dictionary
 qa = {}
 
 # Open the CSV file
@@ -42,6 +41,8 @@ def get_most_similar_question(user_question, qa_dict):
 
     similarity_scores = cosine_similarity(question_vectors[-1], question_vectors[:-1])[0]
     most_similar_index = similarity_scores.argmax()
+    if (similarity_scores[most_similar_index] < 0.5):
+        return None
 
     return list(qa_dict.keys())[most_similar_index]
 
@@ -53,7 +54,9 @@ def index():
 def answer():
     user_input = request.form['user_input']
     most_similar_question = get_most_similar_question(user_input, qa)
-    answer_text = qa.get(most_similar_question, "I don't have an answer for that question.")
+    answer_text = qa.get(most_similar_question)
+    if(answer_text == None):
+        answer_text = "Sorry, I don't know that. Please try again."
     return jsonify({'answer': answer_text})
 
 if __name__ == '__main__':
